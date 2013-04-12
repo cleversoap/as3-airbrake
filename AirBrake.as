@@ -1,4 +1,4 @@
-package com.cleversoap.airbrake
+package com.cleversoap
 {
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
@@ -8,13 +8,15 @@ package com.cleversoap.airbrake
 		protected var _apiKey      :String;
 		protected var _environment :String;
 		protected var _appVersion  :String;
+		protected var _projectRoot :String;
 		protected var _hostName    :String;
 
-		public function AirBrake($apiKey:String, $environment:String, $appVersion:String, $hostName:String)
+		public function AirBrake($apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
 		{
 			_apiKey      = $apiKey;
 			_environment = $environment;
 			_appVersion  = $appVersion;
+			_projectRoot = $projectRoot;
 			_hostName    = $hostName;
 		}
 
@@ -43,7 +45,12 @@ package com.cleversoap.airbrake
 			return _hostName;
 		}
 
-		protected function generateRequest($errorXml:XML):URLRequest
+		public function get projectRoot():String
+		{
+			return _projectRoot;
+		}
+
+		protected function generateRequest($errorXml:XML, $vars:Object = null):URLRequest
 		{
 			var request:URLRequest = new URLRequest();
 			request.method = URLRequestMethod.POST;
@@ -68,6 +75,9 @@ package com.cleversoap.airbrake
 			// Error
 			notice.appendChild(generateErrorXml($error));
 
+			// Server Environment
+			notice.appendChild(generateEnvironmentXml());
+
 			return notice;
 		}
 
@@ -80,8 +90,8 @@ package com.cleversoap.airbrake
 
 		protected function generateNotifierXml():XML
 		{
-			var notifierNode:XML = new XML("<notifier>");
-			notifierNode.appendChild(generateNode("name", "com.cleversoap.airbrake"));
+			var notifierNode:XML = new XML("<notifier/>");
+			notifierNode.appendChild(generateNode("name", "com.cleversoap.AirBrake"));
 			notifierNode.appendChild(generateNode("version", "0.1"));
 			notifierNode.appendChild(generateNode("url", "https://github.com/cleversoap/as3-airbrake"));
 			return notifierNode;
@@ -98,15 +108,48 @@ package com.cleversoap.airbrake
 			errorNode.appendChild(generateNode("message", $error.message));
 
 			// Stack Trace
-			errorNode.appendChild($error.getStackTrace());
+			errorNode.appendChild(generateStackTraceXml($error.getStackTrace()));
 
 			return errorNode;
 		}
 
 		protected function generateStackTraceXml($stackTrace:String):XML
 		{
-			var stackTraceNode:XML = new stackTraceNode("<backtrace/>");
+			var stackTraceNode:XML = new XML("<backtrace/>");
+
+			var lineRegExp:RegExp = /at (?P<type>[\w\.:]+):*\/*(?P<method>\w+)?\(\)(\[(?P<file>.*):(?P<line>\d+)\])?/g;
+			
+			var matches:Object;
+			while (matches = lineRegExp.exec($stackTrace))
+			{
+				stackTraceNode.appendChild(generateLineXml(
+					(matches.method ? matches.method : matches.type),
+					(matches.file ? matches.file : matches.type),
+					(matches.line ? matches.line : 0)
+				));
+			}
+
 			return stackTraceNode;
+		}
+
+		protected function generateLineXml($method:String, $file:String, $lineNumber:uint):XML
+		{
+			var lineNode:XML = new XML("<line/>");
+			lineNode.@method = $method;
+			lineNode.@file = $file;
+			lineNode.@number = $lineNumber;
+			return lineNode;
+		}
+
+		protected function generateEnvironmentXml():XML
+		{
+			var envNode:XML = new XML("<server-environment/>");
+			envNode.appendChild(generateNode("project-root", _projectRoot));
+			envNode.appendChild(generateNode("environment-name", _environment));
+			envNode.appendChild(generateNode("app-version", _appVersion));
+			if (_hostName)
+				envNode.appendChild(generateNode("hostname", _hostName));
+			return envNode;
 		}
 	}
 }
