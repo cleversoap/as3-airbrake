@@ -1,5 +1,8 @@
 package com.cleversoap.airbrake
 {
+	import flash.net.URLRequest;
+	import flash.net.URLRequestMethod;
+
 	public class AirBrake
 	{
 		protected var _apiKey      :String;
@@ -9,7 +12,15 @@ package com.cleversoap.airbrake
 
 		public function AirBrake($apiKey:String, $environment:String, $appVersion:String, $hostName:String)
 		{
+			_apiKey      = $apiKey;
+			_environment = $environment;
+			_appVersion  = $appVersion;
+			_hostName    = $hostName;
+		}
 
+		public function createErrorReport($error:Error):URLRequest
+		{
+			return generateRequest(generateXml($error));
 		}
 
 		public function get apiKey():String
@@ -30,6 +41,20 @@ package com.cleversoap.airbrake
 		public function get hostName():String
 		{
 			return _hostName;
+		}
+
+		protected function generateRequest($errorXml:XML):URLRequest
+		{
+			var request:URLRequest = new URLRequest();
+			request.method = URLRequestMethod.POST;
+			request.data = [$errorXml.toString()];
+			request.url = "http://airbrake.io/notifier_api/v2/notices";
+			return request;
+		}
+
+		protected function generateXml($error:Error):XML
+		{
+			return null;
 		}
 	}
 }
