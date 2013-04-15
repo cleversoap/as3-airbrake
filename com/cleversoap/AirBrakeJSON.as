@@ -15,22 +15,10 @@ package com.cleversoap
 	*
 	* http://help.airbrake.io/kb/api-2/notifier-api-v3
 	*/
-	public class AirBrake
+	public class AirBrakeJSON extends AirBrake implements IAirBrake
 	{
 		/// Project ID
 		protected var _projectId   :String;
-
-		/// API key for your airbrake destination
-		protected var _apiKey      :String;
-
-		/// Environment (typically production, testing, staging, etc...)
-		protected var _environment :String;
-
-		/// App version
-		protected var _appVersion  :String;
-
-		/// Project root
-		protected var _projectRoot :String;
 
 		/// Hostname
 		protected var _hostName    :String;
@@ -45,10 +33,10 @@ package com.cleversoap
 		* @param $projectRoot	The path to the project in which the error occurred.
 		* @param $hostName		Platform host name.
 		*/
-		public function AirBrake($projectId:String, $apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
+		public function AirBrakeJSON($projectId:String, $apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
 		{
+			super($apiKey);
 			_projectId   = $projectId;
-			_apiKey      = $apiKey;
 			_environment = $environment;
 			_appVersion  = $appVersion;
 			_projectRoot = $projectRoot;
@@ -61,7 +49,7 @@ package com.cleversoap
 		*
 		* @param $error	Error to report.
 		*/
-		public function createErrorReport($error:Error):URLRequest
+		public function createErrorNotice($error:Error):URLRequest
 		{
 			return generateRequest(generateNotice($error)); 
 		}
@@ -123,7 +111,6 @@ package com.cleversoap
 				"errors": [generateErrors($error)],
 				"context": generateContext()
 			};
-
 		}
 
 		protected function generateNotifier():Object
@@ -140,7 +127,8 @@ package com.cleversoap
 			return {
 				"type": $error.name,
 				"message": $error.message,
-				"backtrace": generateBackTrace($error.getStackTrace())
+				"backtrace": generateBackTrace($error.getStackTrace()),
+				"context": generateContext()
 			};
 		}
 
@@ -155,7 +143,7 @@ package com.cleversoap
 			{
 				backTrace.push({
 					"file"     : (match.file ? match.file : match.type),
-					"line"     : (match.line ? match.line : 0),
+					"line"     : Number(match.line ? match.line : 0),
 					"function" : (match.method ? match.method : match.type)
 				});
 			}
@@ -166,7 +154,7 @@ package com.cleversoap
 		protected function generateContext():Object
 		{
 			return {
-				"language": "Actionscript 3",
+				"language": "Ruby 1.9.3",
 				"environment": _environment,
 				"version": _appVersion,
 				"url": "www.example.com",
