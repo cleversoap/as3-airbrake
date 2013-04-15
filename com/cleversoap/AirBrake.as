@@ -17,6 +17,9 @@ package com.cleversoap
 	*/
 	public class AirBrake
 	{
+		/// Project ID
+		protected var _projectId   :String;
+
 		/// API key for your airbrake destination
 		protected var _apiKey      :String;
 
@@ -42,8 +45,9 @@ package com.cleversoap
 		* @param $projectRoot	The path to the project in which the error occurred.
 		* @param $hostName		Platform host name.
 		*/
-		public function AirBrake($apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
+		public function AirBrake($projectId:String, $apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
 		{
+			_projectId   = $projectId;
 			_apiKey      = $apiKey;
 			_environment = $environment;
 			_appVersion  = $appVersion;
@@ -59,7 +63,12 @@ package com.cleversoap
 		*/
 		public function createErrorReport($error:Error):URLRequest
 		{
-			return generateRequest(generateXml($error));
+			return generateRequest(generateNotice($error)); 
+		}
+
+		public function get projectId():String
+		{
+			return _projectId;
 		}
 
 		/**
@@ -97,106 +106,72 @@ package com.cleversoap
 			return _projectRoot;
 		}
 
-		protected function generateRequest($errorXml:XML, $vars:Object = null):URLRequest
+		protected function generateRequest($notice:Object):URLRequest
 		{
 			var request:URLRequest = new URLRequest();
 			request.method = URLRequestMethod.POST;
-			request.data = [$errorXml.toString()];
-			request.url = "http://airbrake.io/notifier_api/v2/notices";
+			request.contentType = "application/json";
+			request.url = "http://collect.airbrake.io/api/v3/projects/" + _projectId + "/notices?key=" + _apiKey;
+			request.data = JSON.stringify($notice);
 			return request;
 		}
 
-		protected function generateXml($error:Error):XML
+		protected function generateNotice($error:Error):Object
 		{
-			var notice:XML = new XML("<notice/>");
-			
-			// Notifier API Version
-			notice.@version = "2.3";
+			return {	
+				"notifier": generateNotifier(),
+				"errors": [generateErrors($error)],
+				"context": generateContext()
+			};
 
-			// API Key Node
-			notice.appendChild(generateNode("api-key", _apiKey));
-
-			// Notifier
-			notice.appendChild(generateNotifierXml());
-
-			// Error
-			notice.appendChild(generateErrorXml($error));
-
-			// Server Environment
-			notice.appendChild(generateEnvironmentXml());
-
-			return notice;
 		}
 
-		protected function generateNode($name:String, $value:String):XML
+		protected function generateNotifier():Object
 		{
-			var node:XML = new XML("<" + $name + "/>");
-			node.appendChild($value);
-			return node;
+			return {
+				"name": "com.cleversoap.AirBrake",
+				"version": "0.1",
+				"url": "https://github.com/cleversoap/as3-airbrake"
+			};
 		}
 
-		protected function generateNotifierXml():XML
+		protected function generateErrors($error:Error):Object
 		{
-			var notifierNode:XML = new XML("<notifier/>");
-			notifierNode.appendChild(generateNode("name", "com.cleversoap.AirBrake"));
-			notifierNode.appendChild(generateNode("version", "0.1"));
-			notifierNode.appendChild(generateNode("url", "https://github.com/cleversoap/as3-airbrake"));
-			return notifierNode;
+			return {
+				"type": $error.name,
+				"message": $error.message,
+				"backtrace": generateBackTrace($error.getStackTrace())
+			};
 		}
 
-		protected function generateErrorXml($error:Error):XML
+		protected function generateBackTrace($stackTrace:String):Array
 		{
-			var errorNode:XML = new XML("<error/>");
-			
-			// Error Type
-			errorNode.appendChild(generateNode("class", $error.name));
-
-			// Error Message
-			errorNode.appendChild(generateNode("message", $error.message));
-
-			// Stack Trace
-			errorNode.appendChild(generateStackTraceXml($error.getStackTrace()));
-
-			return errorNode;
-		}
-
-		protected function generateStackTraceXml($stackTrace:String):XML
-		{
-			var stackTraceNode:XML = new XML("<backtrace/>");
+			var backTrace:Array = [];	
 
 			var lineRegExp:RegExp = /at (?P<type>[\w\.:]+):*\/*(?P<method>\w+)?\(\)(\[(?P<file>.*):(?P<line>\d+)\])?/g;
 			
-			var matches:Object;
-			while (matches = lineRegExp.exec($stackTrace))
+			var match:Object;
+			while (match = lineRegExp.exec($stackTrace))
 			{
-				stackTraceNode.appendChild(generateLineXml(
-					(matches.method ? matches.method : matches.type),
-					(matches.file ? matches.file : matches.type),
-					(matches.line ? matches.line : 0)
-				));
+				backTrace.push({
+					"file"     : (match.file ? match.file : match.type),
+					"line"     : (match.line ? match.line : 0),
+					"function" : (match.method ? match.method : match.type)
+				});
 			}
 
-			return stackTraceNode;
+			return backTrace;
 		}
 
-		protected function generateLineXml($method:String, $file:String, $lineNumber:uint):XML
+		protected function generateContext():Object
 		{
-			var lineNode:XML = new XML("<line/>");
-			lineNode.@method = $method;
-			lineNode.@file = $file;
-			lineNode.@number = $lineNumber;
-			return lineNode;
-		}
-
-		protected function generateEnvironmentXml():XML
-		{
-			var envNode:XML = new XML("<server-environment/>");
-			envNode.appendChild(generateNode("project-root", _projectRoot));
-			envNode.appendChild(generateNode("environment-name", _environment));
-			envNode.appendChild(generateNode("app-version", _appVersion));
-			if (_hostName)
-				envNode.appendChild(generateNode("hostname", _hostName));
-			return envNode;
+			return {
+				"language": "Actionscript 3",
+				"environment": _environment,
+				"version": _appVersion,
+				"url": "www.example.com",
+				"rootDirectory": _projectRoot
+			};
 		}
 	}
 }
