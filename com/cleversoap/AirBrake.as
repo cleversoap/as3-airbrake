@@ -1,4 +1,4 @@
-package com.cleversoap
+package com.cleversoap.airbrake
 {
 	internal class AirBrake
 	{

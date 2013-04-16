@@ -1,4 +1,4 @@
-package com.cleversoap
+package com.cleversoap.airbrake
 {
 	import flash.net.URLRequest;
 

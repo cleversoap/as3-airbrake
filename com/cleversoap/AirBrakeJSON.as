@@ -3,7 +3,7 @@
 * https://github.com/cleversoap/as3-airbrake
 * MIT License (http://opensource.org/licenses/MIT)
 */
-package com.cleversoap
+package com.cleversoap.airbrake
 {
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
