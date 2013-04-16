@@ -1,7 +1,4 @@
 # Build and Release Folders
-bin/
-bin-debug/
-bin-release/
 test/
 
 # Other files and folders
