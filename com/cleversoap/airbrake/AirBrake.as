@@ -1,5 +1,9 @@
 package com.cleversoap.airbrake
 {
+	import flash.errors.IllegalOperationError;
+	import flash.net.URLRequest;
+	import flash.net.URLRequestMethod;
+
 	/**
 	* Core AirBrake notifier functionality.
 	*
@@ -16,14 +20,21 @@ package com.cleversoap.airbrake
 		protected var _projectVersion :String;
 
 		// Notifier Data
-		protected var _notifier    :Object;
+		protected var _notifier       :Object;
+
+		// URL Request Params
+		protected var _contentType    :String;
+		protected var _apiUrl         :String;
 
 		//---------------------------------------------------------[CONSTRUCTOR]
 
-		public function AirBrake($apiKey:String, $environment:String)
+		public function AirBrake($apiKey:String, $environment:String,
+								 $projectVersion:String = "0.0", $projectRoot:String = "/")
 		{
 			_apiKey = $apiKey;
 			_environment = $environment;
+			_projectVersion = $projectVersion;
+			_projectRoot = $projectRoot;
 
 			// Define the notifier
 			_notifier = {
@@ -57,6 +68,16 @@ package com.cleversoap.airbrake
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 
 
+		protected function makeRequest($notice:*):URLRequest
+		{
+			var request:URLRequest = new URLRequest();
+			request.method         = URLRequestMethod.POST;
+			request.contentType    = _contentType;
+			request.url            = _apiUrl;
+			request.data           = $notice;
+			return request;
+		}
+
 		protected function parseStackTrace($stackTrace:String):Array
 		{
 			var backTrace:Array = [];	
@@ -79,7 +100,7 @@ package com.cleversoap.airbrake
 
 		protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
 		{
-				
+			throw new IllegalOperationError("makeBackTraceLine must be called from child class implementation only");
 		}
 	}
 }

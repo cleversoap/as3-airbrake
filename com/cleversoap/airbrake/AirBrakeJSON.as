@@ -30,7 +30,7 @@ package com.cleversoap.airbrake
 		                             $projectVersion:String = "0.0", $projectRoot:String = "/")
 		{
 			// Build the generic airbrake notifier core first
-			super($apiKey, $environment);
+			super($apiKey, $environment, $projectVersion, $projectRoot);
 
 			// Append JSON to the notifier name
 			_notifier.name += "JSON";
@@ -49,7 +49,7 @@ package com.cleversoap.airbrake
 		*/
 		public function createErrorNotice($error:Error):URLRequest
 		{
-			return makeRequest(makeNotice($error)); 
+			return makeRequest(JSON.stringify(makeNotice($error))); 
 		}
 
 		//----------------------------------------------------------[PROPERTIES] 
@@ -63,19 +63,6 @@ package com.cleversoap.airbrake
 		}
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 
-
-		/**
-		* Create a URLRequest that points to the AirBrake JSON API.
-		*/
-		protected function makeRequest($notice:Object):URLRequest
-		{
-			var request:URLRequest = new URLRequest();
-			request.method         = URLRequestMethod.POST;
-			request.contentType    = "application/json";
-			request.url            = "http://collect.airbrake.io/api/v3/projects/" + _projectId + "/notices?key=" + _apiKey;
-			request.data           = JSON.stringify($notice);
-			return request;
-		}
 
 		protected function makeNotice($error:Error):Object
 		{
