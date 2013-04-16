@@ -8,35 +8,32 @@ package com.cleversoap.airbrake
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
 
-	/**
-	* Simple AirBrake notifier that uses native Flash Errors.
-	* Does make any assumptions about how you send the reports and
-	* only generates a URLRequest object.
-	*
-	* http://help.airbrake.io/kb/api-2/notifier-api-v3
-	*/
+
 	public class AirBrakeJSON extends AirBrake implements IAirBrake
 	{
+		//-------------------------------------------------------------[MEMBERS]
+
 		/// Project ID
 		protected var _projectId   :String;
 
+		//---------------------------------------------------------[CONSTRUCTOR]
+
 		/**
 		* Create an AirBrake notifier instance for a specific environment
-		* configuration to generate error reports for.
+		* configuration to make error reports for.
 		*
-		* @param $apiKey		AirBrake API Key.
-		* @param $environment	AirBrake environment to report to.
-		* @param $appVersion	The version of your application to report errors for.
-		* @param $projectRoot	The path to the project in which the error occurred.
-		* @param $hostName		Platform host name.
+		* @param $apiKey        AirBrake API Key.
+		* @param $environment   AirBrake environment to report to.
+		* @param $projectId     AirBrake Project ID key.
 		*/
-		public function AirBrakeJSON($projectId:String, $apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
+		public function AirBrakeJSON($apiKey:String, $environment:String, $projectId:String,
+		                             $projectVersion:String = "0.0", $projectRoot:String = "/")
 		{
 			// Build the generic airbrake notifier core first
 			super($apiKey, $environment);
 
 			// Append JSON to the notifier name
-			this.notifier.name += "JSON";
+			_notifier.name += "JSON";
 
 			// Set the project ID as this is needed by the JSON API only
 			_projectId   = $projectId;
@@ -52,7 +49,7 @@ package com.cleversoap.airbrake
 		*/
 		public function createErrorNotice($error:Error):URLRequest
 		{
-			return generateRequest(generateNotice($error)); 
+			return makeRequest(makeNotice($error)); 
 		}
 
 		//----------------------------------------------------------[PROPERTIES] 
@@ -70,7 +67,7 @@ package com.cleversoap.airbrake
 		/**
 		* Create a URLRequest that points to the AirBrake JSON API.
 		*/
-		protected function generateRequest($notice:Object):URLRequest
+		protected function makeRequest($notice:Object):URLRequest
 		{
 			var request:URLRequest = new URLRequest();
 			request.method         = URLRequestMethod.POST;
@@ -80,50 +77,36 @@ package com.cleversoap.airbrake
 			return request;
 		}
 
-		protected function generateNotice($error:Error):Object
+		protected function makeNotice($error:Error):Object
 		{
 			return {	
 				"notifier" : _notifier, 
-				"errors"   : [generateErrors($error)],
-				"context"  : generateContext()
+				"errors"   : [makeErrors($error)],
+				"context"  : makeContext()
 			};
 		}
 
-		protected function generateErrors($error:Error):Object
+		protected function makeErrors($error:Error):Object
 		{
 			return {
 				"type"      : $error.name,
 				"message"   : $error.message,
-				"backtrace" : generateBackTrace($error.getStackTrace()),
-				"context"   : generateContext()
+				"backtrace" : parseStackTrace($error.getStackTrace()),
+				"context"   : makeContext()
 			};
 		}
 
-		protected function generateBackTrace($stackTrace:String):Array
+		override protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
 		{
-			var backTrace:Array = [];	
-
-			var lineRegExp:RegExp = /at (?P<type>[\w\.:]+):*\/*(?P<method>\w+)?\(\)(\[(?P<file>.*):(?P<line>\d+)\])?/g;
-			
-			var match:Object;
-			while (match = lineRegExp.exec($stackTrace))
-			{
-				backTrace.push({
-					"file"     : (match.file ? match.file : match.type),
-					"line"     : Number(match.line ? match.line : 0),
-					"function" : (match.method ? match.method : match.type)
-				});
-			}
-
-			return backTrace;
+			return {"file": $file, "line": $line, "function": $function};
 		}
-
-		protected function generateContext():Object
+	
+		protected function makeContext():Object
 		{
 			return {
-				"language"      : "Ruby 1.9.3",
+				"language"      : "Actionscript 3",
 				"environment"   : _environment,
-				"version"       : _appVersion,
+				"version"       : _projectVersion,
 				"url"           : "www.example.com",
 				"rootDirectory" : _projectRoot
 			};

@@ -6,5 +6,10 @@ package com.cleversoap.airbrake
 		{
 			super($apiKey, $environment);
 		}
+
+		public function createErrorNotice($error:Error):URLRequest
+		{
+			return new URLRequest();
+		}
 	}
 }
