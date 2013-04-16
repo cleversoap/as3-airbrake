@@ -16,10 +16,15 @@ package com.cleversoap.airbrake
 		//---------------------------------------------------------[CONSTRUCTOR]
 
 		/**
+		* Initialises an AirBrake XML Notifier for a specific project.
 		*
+		* @param $apiKey         AirBrake API key for your project.
+		* @param $environment    Reporting environment such as "staging" or "production".
+		* @param $projectVersion Version of project to report errors for.
+		* @param $projectRoot    Root of the project and where the files are located.*
 		*/
 		public function AirBrakeXML($apiKey:String, $environment:String,
-		                            $projectVersion:String = "0.0", $projectRoot:String = "/")
+		                            $projectVersion:String = "0.0", $projectRoot:String = "./")
 		{
 			super($apiKey, $environment, $projectVersion, $projectRoot);
 
@@ -33,6 +38,8 @@ package com.cleversoap.airbrake
 
 		/**
 		* Create an error notice for the AirBrake XML API (v2)
+		*
+		* @param $error The error object to parse and report.
 		*/
 		public function createErrorNotice($error:Error):URLRequest
 		{

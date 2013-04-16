@@ -8,7 +8,10 @@ package com.cleversoap.airbrake
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
 
-
+	/**
+	* AirBrake API v3 JSON Notifier
+	* http://help.airbrake.io/kb/api-2/notifier-api-v3
+	*/
 	public class AirBrakeJSON extends AirBrake implements IAirBrake
 	{
 		//-------------------------------------------------------------[MEMBERS]
@@ -19,15 +22,16 @@ package com.cleversoap.airbrake
 		//---------------------------------------------------------[CONSTRUCTOR]
 
 		/**
-		* Create an AirBrake notifier instance for a specific environment
-		* configuration to make error reports for.
+		* Initialises an AirBrake JSON Notifier for a specific project.
 		*
-		* @param $apiKey        AirBrake API Key.
-		* @param $environment   AirBrake environment to report to.
-		* @param $projectId     AirBrake Project ID key.
+		* @param $apiKey         AirBrake API key for your project.
+		* @param $environment    Reporting environment such as "staging" or "production".
+		* @param $projectId      AirBrake Project ID key.
+		* @param $projectVersion Version of project to report errors for.
+		* @param $projectRoot    Root of the project and where the files are located.
 		*/
 		public function AirBrakeJSON($apiKey:String, $environment:String, $projectId:String,
-		                             $projectVersion:String = "0.0", $projectRoot:String = "/")
+		                             $projectVersion:String = "0.0", $projectRoot:String = "./")
 		{
 			// Build the generic airbrake notifier core first
 			super($apiKey, $environment, $projectVersion, $projectRoot);
@@ -64,6 +68,11 @@ package com.cleversoap.airbrake
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 
 
+		/**
+		* Make the notice object containing all the data needed to report.
+		*
+		* @param $error The error object to parse and report.
+		*/
 		protected function makeNotice($error:Error):Object
 		{
 			return {	
@@ -73,6 +82,11 @@ package com.cleversoap.airbrake
 			};
 		}
 
+		/**
+		* Make the error object and parse the stack trace.
+		*
+		* @param $error The error object to parse. 
+		*/
 		protected function makeErrors($error:Error):Object
 		{
 			return {
@@ -83,11 +97,22 @@ package com.cleversoap.airbrake
 			};
 		}
 
+		/**
+		* Called when the base AirBrake class is parsing the stack trace to
+		* output JSON elements for each entry.
+		*/
 		override protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
 		{
-			return {"file": $file, "line": $line, "function": $function};
+			return {
+				"file"     : $file,
+				"line"     : $line,
+				"function" : $function
+			};
 		}
 	
+		/**
+		* Optional context property creator.
+		*/
 		protected function makeContext():Object
 		{
 			return {
