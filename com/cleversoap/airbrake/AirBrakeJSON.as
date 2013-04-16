@@ -20,9 +20,6 @@ package com.cleversoap.airbrake
 		/// Project ID
 		protected var _projectId   :String;
 
-		/// Hostname
-		protected var _hostName    :String;
-
 		/**
 		* Create an AirBrake notifier instance for a specific environment
 		* configuration to generate error reports for.
@@ -35,13 +32,17 @@ package com.cleversoap.airbrake
 		*/
 		public function AirBrakeJSON($projectId:String, $apiKey:String, $environment:String, $appVersion:String, $projectRoot:String = "/", $hostName:String = null)
 		{
-			super($apiKey);
+			// Build the generic airbrake notifier core first
+			super($apiKey, $environment);
+
+			// Append JSON to the notifier name
+			this.notifier.name += "JSON";
+
+			// Set the project ID as this is needed by the JSON API only
 			_projectId   = $projectId;
-			_environment = $environment;
-			_appVersion  = $appVersion;
-			_projectRoot = $projectRoot;
-			_hostName    = $hostName;
 		}
+
+		//----------------------------------------------------[PUBLIC FUNCTIONS]
 
 		/**
 		* Creates a URLRequest that will report an error to AirBrake
@@ -54,81 +55,47 @@ package com.cleversoap.airbrake
 			return generateRequest(generateNotice($error)); 
 		}
 
+		//----------------------------------------------------------[PROPERTIES] 
+
+		/**
+		* Airbrake Project ID
+		*/
 		public function get projectId():String
 		{
 			return _projectId;
 		}
 
-		/**
-		*/
-		public function get apiKey():String
-		{
-			return _apiKey;
-		}
+		//----------------------------------------------------[MEMBER FUNCTIONS] 
 
 		/**
+		* Create a URLRequest that points to the AirBrake JSON API.
 		*/
-		public function get environment():String
-		{
-			return _environment;
-		}
-
-		/**
-		*/
-		public function get appVersion():String
-		{
-			return _appVersion;
-		}
-
-		/**
-		*/
-		public function get hostName():String
-		{
-			return _hostName;
-		}
-
-		/**
-		*/
-		public function get projectRoot():String
-		{
-			return _projectRoot;
-		}
-
 		protected function generateRequest($notice:Object):URLRequest
 		{
 			var request:URLRequest = new URLRequest();
-			request.method = URLRequestMethod.POST;
-			request.contentType = "application/json";
-			request.url = "http://collect.airbrake.io/api/v3/projects/" + _projectId + "/notices?key=" + _apiKey;
-			request.data = JSON.stringify($notice);
+			request.method         = URLRequestMethod.POST;
+			request.contentType    = "application/json";
+			request.url            = "http://collect.airbrake.io/api/v3/projects/" + _projectId + "/notices?key=" + _apiKey;
+			request.data           = JSON.stringify($notice);
 			return request;
 		}
 
 		protected function generateNotice($error:Error):Object
 		{
 			return {	
-				"notifier": generateNotifier(),
-				"errors": [generateErrors($error)],
-				"context": generateContext()
-			};
-		}
-
-		protected function generateNotifier():Object
-		{
-			return {
-				"name": "com.cleversoap.AirBrake",
-				"version": "0.1",
-				"url": "https://github.com/cleversoap/as3-airbrake"
+				"notifier" : _notifier, 
+				"errors"   : [generateErrors($error)],
+				"context"  : generateContext()
 			};
 		}
 
 		protected function generateErrors($error:Error):Object
 		{
 			return {
-				"type": $error.name,
-				"message": $error.message,
-				"backtrace": generateBackTrace($error.getStackTrace()),
-				"context": generateContext()
+				"type"      : $error.name,
+				"message"   : $error.message,
+				"backtrace" : generateBackTrace($error.getStackTrace()),
+				"context"   : generateContext()
 			};
 		}
 
@@ -154,11 +121,11 @@ package com.cleversoap.airbrake
 		protected function generateContext():Object
 		{
 			return {
-				"language": "Ruby 1.9.3",
-				"environment": _environment,
-				"version": _appVersion,
-				"url": "www.example.com",
-				"rootDirectory": _projectRoot
+				"language"      : "Ruby 1.9.3",
+				"environment"   : _environment,
+				"version"       : _appVersion,
+				"url"           : "www.example.com",
+				"rootDirectory" : _projectRoot
 			};
 		}
 	}
