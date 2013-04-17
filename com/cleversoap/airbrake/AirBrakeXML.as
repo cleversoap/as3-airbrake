@@ -41,9 +41,9 @@ package com.cleversoap.airbrake
 		*
 		* @param $error The error object to parse and report.
 		*/
-		public function createErrorNotice($error:Error):URLRequest
+		public function createErrorNotice($error:Error, $params:Object = null, $url:String = null):URLRequest
 		{
-			return makeRequest(makeNotice($error)); 
+			return makeRequest(makeNotice($error, $params, $url)); 
 		}
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 
@@ -51,8 +51,30 @@ package com.cleversoap.airbrake
 		/**
 		* Create the entirety of the notice XML to send to AirBrake.
 		*/
-		protected function makeNotice($error:Error):XML
+		protected function makeNotice($error:Error, $params:Object, $url:String):XML
 		{
+			// The request node should only be dynamically built
+			// if it will contain data. This means that either the
+			// URL or params must be passed otherwise no request
+			// node will be created.
+			var reqNode:XML = <request/>
+
+			// URL
+			if ($url)
+				reqNode.appendChild(<url>{$url}</url>);
+
+			// Parameters
+			if ($params)
+			{
+				var paramsNode:XML = <params/>;
+
+				for (var param:String in $params)
+					paramsNode.appendChild(<var key={param}>{$params[param]}</var>);
+
+				if (paramsNode.children().length() > 0)
+					reqNode.appendChild(paramsNode);
+			}
+
 			return(
 
 				<notice version="2.3">
@@ -72,6 +94,7 @@ package com.cleversoap.airbrake
 						<environment-name>{_environment}</environment-name>
 						<app-version>{_projectVersion}</app-version>
 					</server-environment>
+					{reqNode.children().length() > 0 ? reqNode : ""}	
 				</notice>
 
 			);

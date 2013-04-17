@@ -41,6 +41,9 @@ package com.cleversoap.airbrake
 
 			// Set the project ID as this is needed by the JSON API only
 			_projectId   = $projectId;
+
+			_contentType = "application/json";
+			_apiUrl = "http://collect.airbrake.io/api/v3/projects/" + _projectId + "/notices?key=" + _apiKey;
 		}
 
 		//----------------------------------------------------[PUBLIC FUNCTIONS]
@@ -51,7 +54,7 @@ package com.cleversoap.airbrake
 		*
 		* @param $error	Error to report.
 		*/
-		public function createErrorNotice($error:Error):URLRequest
+		public function createErrorNotice($error:Error, $params:Object = null, $url:String = null):URLRequest
 		{
 			return makeRequest(JSON.stringify(makeNotice($error))); 
 		}
