@@ -136,7 +136,8 @@ package com.cleversoap.airbrake
 				backTrace.push(makeBackTraceLine(
 					(match.file ? match.file : match.type),    // File
 					uint(match.line ? match.line : 0),         // Line Number
-					(match.method ? match.method : match.type) // Function
+					(match.method ? match.method : match.type), // Function
+					match.type
 				));
 			}
 
@@ -151,7 +152,7 @@ package com.cleversoap.airbrake
 		* @param $line     Line at which the error occurred or was called.
 		* @param $function Function in which the error occurred or was called.
 		*/
-		protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
+		protected function makeBackTraceLine($file:String, $line:uint, $function:String, $component:String = null):*
 		{
 			throw new IllegalOperationError("makeBackTraceLine must be called from child class implementation only");
 		}
