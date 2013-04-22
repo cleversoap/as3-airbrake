@@ -102,6 +102,7 @@ package com.cleversoap.airbrake
 						<project-root>{_projectRoot}</project-root>
 						<environment-name>{_environment}</environment-name>
 						<app-version>{_projectVersion}</app-version>
+						<hostname>{_environment}</hostname>
 					</server-environment>
 					{reqNode.children().length() > 0 ? reqNode : ""}	
 				</notice>
