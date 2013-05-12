@@ -104,7 +104,7 @@ package com.cleversoap.airbrake
 		* Called when the base AirBrake class is parsing the stack trace to
 		* output JSON elements for each entry.
 		*/
-		override protected function makeBackTraceLine($file:String, $line:uint, $function:String, $component:String = null):*
+		override protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
 		{
 			return {
 				"file"     : $file,
