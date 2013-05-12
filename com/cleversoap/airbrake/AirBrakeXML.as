@@ -61,7 +61,13 @@ package com.cleversoap.airbrake
 
 			// URL
 			if ($url)
+                        {
 				reqNode.appendChild(<url>{$url}</url>);
+                        }
+                        else
+                        {
+                                reqNode.appendChild(<url/>);
+                        }
 
 			// Parameters
 			if ($params)
