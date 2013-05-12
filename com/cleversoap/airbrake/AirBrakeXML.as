@@ -61,7 +61,13 @@ package com.cleversoap.airbrake
 
 			// URL
 			if ($url)
+                        {
 				reqNode.appendChild(<url>{$url}</url>);
+                        }
+                        else
+                        {
+                                reqNode.appendChild(<url/>);
+                        }
 
 			// Parameters
 			if ($params)
@@ -77,10 +83,16 @@ package com.cleversoap.airbrake
 
 			// If there is at least one entry in the back trace
 			// then extract it the first one and use it to describe the component action
-			var backTrace:XML = makeBackTrace($error.getStackTrace());
+            var stackTrace:String = $error.getStackTrace();
+            var component:String = parseComponent(stackTrace);
+            if (component)
+            {
+                reqNode.appendChild(<component>{component}</component>);
+            }
+
+			var backTrace:XML = makeBackTrace(stackTrace);
 			if (backTrace.children().length() > 0)
 			{
-				reqNode.appendChild(<component>{backTrace.children()[0].@component}</component>);
 				reqNode.appendChild(<action>{backTrace.children()[0].@method}</action>);
 			}
 
@@ -114,11 +126,9 @@ package com.cleversoap.airbrake
 		* Called when the base AirBrake class is parsing the stack trace to
 		* output XML elements for each entry.
 		*/
-		override protected function makeBackTraceLine($file:String, $line:uint, $function:String, $component:String = null):*
+		override protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
 		{
 			var lineNode:XML = <line/>
-			if ($component)
-				lineNode.@component = $component;
 			lineNode.@method = $function;
 			lineNode.@file   = $file;
 			lineNode.@number = $line;
