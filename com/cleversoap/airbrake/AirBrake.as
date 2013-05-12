@@ -136,13 +136,28 @@ package com.cleversoap.airbrake
 				backTrace.push(makeBackTraceLine(
 					(match.file ? match.file : match.type),    // File
 					uint(match.line ? match.line : 0),         // Line Number
-					(match.method ? match.method : match.type), // Function
-					match.type
+					(match.method ? match.method : match.type) // Function
 				));
 			}
 
 			return backTrace;
 		}
+
+
+		/**
+		* Parse out the class that the error occurred in.
+		* This is useful for specifying a component param in the request
+		* element of the response.
+		*
+		* @param $stackTrace The stack trace string of the Error object.
+		*/
+        protected function parseComponent($stackTrace:String) : String
+        {
+            var lineRegExp:RegExp = /at (?P<type>[\w\.:]+):*\/*(?P<method>\w+)?\(\)(\[(?P<file>.*):(?P<line>\d+)\])?/;
+            var match:Object = lineRegExp.exec($stackTrace);
+            return match ? match.type : null;
+        }
+
 
 		/**
 		* Should be used by child classes to make an implementation specific
@@ -152,7 +167,7 @@ package com.cleversoap.airbrake
 		* @param $line     Line at which the error occurred or was called.
 		* @param $function Function in which the error occurred or was called.
 		*/
-		protected function makeBackTraceLine($file:String, $line:uint, $function:String, $component:String = null):*
+		protected function makeBackTraceLine($file:String, $line:uint, $function:String):*
 		{
 			throw new IllegalOperationError("makeBackTraceLine must be called from child class implementation only");
 		}
