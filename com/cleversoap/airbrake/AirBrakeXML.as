@@ -21,17 +21,18 @@ package com.cleversoap.airbrake
 		* @param $apiKey         AirBrake API key for your project.
 		* @param $environment    Reporting environment such as "staging" or "production".
 		* @param $projectVersion Version of project to report errors for.
-		* @param $projectRoot    Root of the project and where the files are located.*
+		* @param $projectRoot    Root of the project and where the files are located.
+		* @param $apiUrl         Custom endpoint, useful for Errbit instances
 		*/
 		public function AirBrakeXML($apiKey:String, $environment:String,
-		                            $projectVersion:String = "0.0", $projectRoot:String = "./")
+		                            $projectVersion:String = "0.0", $projectRoot:String = "./", $apiUrl:String = "http://api.airbrake.io/notifier_api/v2/notices")
 		{
 			super($apiKey, $environment, $projectVersion, $projectRoot);
 
 			_notifier.name += "XML";
 
 			_contentType = "text/xml";
-			_apiUrl = "http://api.airbrake.io/notifier_api/v2/notices";
+			_apiUrl = $apiUrl; 
 		}
 
 		//----------------------------------------------------[PUBLIC FUNCTIONS]
