@@ -55,8 +55,6 @@ package com.cleversoap.airbrake
 				_environment.version = "0.0";
 			if (!_environment.hasOwnProperty("root"))
 				_environment.root = "./";
-			if (!_environment.hasOwnProperty("vars"))
-				_environment.vars = {};
 				
 
 			// Setup Session
@@ -83,28 +81,7 @@ package com.cleversoap.airbrake
 			return _session;
 		}
 
-		public function addSessionVar($name:String, $value:*):void
-		{
-			_session[$name] = $value;
-		}
-
-		public function removeSessionVar($name:String):void
-		{
-			if (_session.hasOwnProperty($name))
-				delete _session[$name];
-		}
-
-		public function addEnvironmentVar($name:String, $value:*):void
-		{
-			_environment.vars[$name] = $value;
-		}
-
-		public function removeEnvironmentVar($name:String):void
-		{
-			if (_environment.vars.hasOwnProperty($name))
-				delete _environment.vars[$name];
-		}
-
+		
 		/**
 		* AirBrake API key for the project.
 		*/

@@ -21,11 +21,5 @@ package com.cleversoap.airbrake
 
 		function get environment():Object;
 		function get session():Object;
-
-		function addEnvironmentVar($name:String, $value:*):void;
-		function addSessionVar($name:String, $value:*):void;
-
-		function removeEnvironmentVar($name:String):void;
-		function removeSessionVar($name:String):void;
 	}
 }

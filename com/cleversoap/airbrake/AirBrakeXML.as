@@ -119,7 +119,6 @@ package com.cleversoap.airbrake
 						<environment-name>{this.environmentName}</environment-name>
 						<app-version>{this.version}</app-version>
 						<hostname>{this.environmentName}</hostname>
-						<var key="os">OSX</var>
 					</server-environment>
 					{reqNode.children().length() > 0 ? reqNode : ""}	
 				</notice>
