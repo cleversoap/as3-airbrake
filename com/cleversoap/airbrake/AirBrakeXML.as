@@ -24,8 +24,7 @@ package com.cleversoap.airbrake
 		* @param $projectRoot    Root of the project and where the files are located.
 		* @param $apiUrl         Custom endpoint, useful for Errbit instances
 		*/
-		public function AirBrakeXML($apiKey:String, $environment:String,
-		                            $projectVersion:String = "0.0", $projectRoot:String = "./", $apiUrl:String = "http://api.airbrake.io/notifier_api/v2/notices")
+		public function AirBrakeXML($apiKey:String, $environment:String, $projectVersion:String = "0.0", $projectRoot:String = "./", $apiUrl:String = "http://api.airbrake.io/notifier_api/v2/notices")
 		{
 			super($apiKey, $environment, $projectVersion, $projectRoot);
 
@@ -42,9 +41,9 @@ package com.cleversoap.airbrake
 		*
 		* @param $error The error object to parse and report.
 		*/
-		public function createErrorNotice($error:Error, $params:Object = null, $url:String = null):URLRequest
+		public function createErrorNotice($error:Error, $params:Object = null, $url:String = null, $session:Object = null):URLRequest
 		{
-			return makeRequest(makeNotice($error, $params, $url)); 
+			return makeRequest(makeNotice($error, $params, $url, $session)); 
 		}
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 
@@ -52,7 +51,7 @@ package com.cleversoap.airbrake
 		/**
 		* Create the entirety of the notice XML to send to AirBrake.
 		*/
-		protected function makeNotice($error:Error, $params:Object, $url:String):XML
+		protected function makeNotice($error:Error, $params:Object, $url:String, $session:Object):XML
 		{
 			// The request node should only be dynamically built
 			// if it will contain data. This means that either the
@@ -80,6 +79,18 @@ package com.cleversoap.airbrake
 
 				if (paramsNode.children().length() > 0)
 					reqNode.appendChild(paramsNode);
+			}
+
+			// Session Params
+			if ($session)
+			{
+				var sessionNode:XML = <session/>
+
+				for (var sessionVar:String in $session)
+					sessionNode.appendChild(<var key={sessionVar}>{$session[sessionVar]}</var>);
+
+				if (sessionNode.children().length() > 0)
+					reqNode.appendChild(sessionNode);
 			}
 
 			// If there is at least one entry in the back trace
