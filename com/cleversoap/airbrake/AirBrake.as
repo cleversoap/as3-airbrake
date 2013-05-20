@@ -22,9 +22,8 @@ package com.cleversoap.airbrake
 
 		// Several properties are common (and useful) to both API versions
 		protected var _apiKey         :String;
-		protected var _environment    :String;
-		protected var _projectRoot    :String;
-		protected var _projectVersion :String;
+		protected var _environment    :Object;
+		protected var _session        :Object;
 
 		// Notifier Data
 		protected var _notifier       :Object;
@@ -43,25 +42,68 @@ package com.cleversoap.airbrake
 		* @param $projectVersion Version of project to report errors for.
 		* @param $projectRoot    Root of the project and where the files are located.
 		*/
-		public function AirBrake($apiKey:String, $environment:String,
-		                         $projectVersion:String = "0.0", $projectRoot:String = "./")
+		public function AirBrake($apiKey:String, $environment:Object, $session:Object = null)
 		{
 			// Assign core member properties that all AirBrake notifiers need.
 			_apiKey = $apiKey;
-			_environment = $environment;
-			_projectVersion = $projectVersion;
-			_projectRoot = $projectRoot;
+
+			// Setup Environment
+			_environment = $environment ? $environment : {};
+			if (!_environment.hasOwnProperty("name"))
+				_environment.name = "development";
+			if (!_environment.hasOwnProperty("version"))
+				_environment.version = "0.0";
+			if (!_environment.hasOwnProperty("root"))
+				_environment.root = "./";
+			if (!_environment.hasOwnProperty("vars"))
+				_environment.vars = {};
+				
+
+			// Setup Session
+			_session = $session ? $session : {};
 
 			// Define the notifier to tell AirBrake that
 			// what is reporting to it.
 			_notifier = {
 				"name"    : "com.cleversoap.AirBrake",
-				"version" : "0.3",
+				"version" : "0.7",
 				"url"     : "https://github.com/cleversoap/as3-airbrake"
 			};
 		}
 
 		//----------------------------------------------------------[PROPERTIES]
+
+		public function get environment():Object
+		{
+			return _environment;
+		}
+
+		public function get session():Object
+		{
+			return _session;
+		}
+
+		public function addSessionVar($name:String, $value:*):void
+		{
+			_session[$name] = $value;
+		}
+
+		public function removeSessionVar($name:String):void
+		{
+			if (_session.hasOwnProperty($name))
+				delete _session[$name];
+		}
+
+		public function addEnvironmentVar($name:String, $value:*):void
+		{
+			_environment.vars[$name] = $value;
+		}
+
+		public function removeEnvironmentVar($name:String):void
+		{
+			if (_environment.vars.hasOwnProperty($name))
+				delete _environment.vars[$name];
+		}
 
 		/**
 		* AirBrake API key for the project.
@@ -74,25 +116,25 @@ package com.cleversoap.airbrake
 		/**
 		* AirBrake environment that errors will be reported to for the project.
 		*/
-		public function get environment():String
+		public function get environmentName():String
 		{
-			return _environment;
+			return _environment.name;
 		}
 
 		/**
 		* Project root directory.
 		*/
-		public function get projectRoot():String
+		public function get root():String
 		{
-			return _projectRoot;
+			return _environment.root; 
 		}
 
 		/**
 		* Project version that errors will be reported for.
 		*/
-		public function get projectVersion():String
+		public function get version():String
 		{
-			return _projectVersion;
+			return _environment.version; 
 		}
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 

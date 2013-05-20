@@ -24,9 +24,9 @@ package com.cleversoap.airbrake
 		* @param $projectRoot    Root of the project and where the files are located.
 		* @param $apiUrl         Custom endpoint, useful for Errbit instances
 		*/
-		public function AirBrakeXML($apiKey:String, $environment:String, $projectVersion:String = "0.0", $projectRoot:String = "./", $apiUrl:String = "http://api.airbrake.io/notifier_api/v2/notices")
+		public function AirBrakeXML($apiKey:String, $environment:Object, $session:Object = null, $apiUrl:String = "http://api.airbrake.io/notifier_api/v2/notices")
 		{
-			super($apiKey, $environment, $projectVersion, $projectRoot);
+			super($apiKey, $environment, $session);
 
 			_notifier.name += "XML";
 
@@ -41,9 +41,9 @@ package com.cleversoap.airbrake
 		*
 		* @param $error The error object to parse and report.
 		*/
-		public function createErrorNotice($error:Error, $params:Object = null, $url:String = null, $session:Object = null):URLRequest
+		public function createErrorNotice($error:Error, $params:Object = null, $url:String = null):URLRequest
 		{
-			return makeRequest(makeNotice($error, $params, $url, $session)); 
+			return makeRequest(makeNotice($error, $params, $url)); 
 		}
 
 		//----------------------------------------------------[MEMBER FUNCTIONS] 
@@ -51,7 +51,7 @@ package com.cleversoap.airbrake
 		/**
 		* Create the entirety of the notice XML to send to AirBrake.
 		*/
-		protected function makeNotice($error:Error, $params:Object, $url:String, $session:Object):XML
+		protected function makeNotice($error:Error, $params:Object, $url:String):XML
 		{
 			// The request node should only be dynamically built
 			// if it will contain data. This means that either the
@@ -61,13 +61,9 @@ package com.cleversoap.airbrake
 
 			// URL
 			if ($url)
-                        {
 				reqNode.appendChild(<url>{$url}</url>);
-                        }
-                        else
-                        {
-                                reqNode.appendChild(<url/>);
-                        }
+			else
+				reqNode.appendChild(<url/>);
 
 			// Parameters
 			if ($params)
@@ -82,12 +78,12 @@ package com.cleversoap.airbrake
 			}
 
 			// Session Params
-			if ($session)
+			if (this.session)
 			{
 				var sessionNode:XML = <session/>
 
-				for (var sessionVar:String in $session)
-					sessionNode.appendChild(<var key={sessionVar}>{$session[sessionVar]}</var>);
+				for (var sv:String in this.session)
+					sessionNode.appendChild(<var key={sv}>{this.session[sv]}</var>);
 
 				if (sessionNode.children().length() > 0)
 					reqNode.appendChild(sessionNode);
@@ -98,15 +94,11 @@ package com.cleversoap.airbrake
             var stackTrace:String = $error.getStackTrace();
             var component:String = parseComponent(stackTrace);
             if (component)
-            {
                 reqNode.appendChild(<component>{component}</component>);
-            }
 
 			var backTrace:XML = makeBackTrace(stackTrace);
 			if (backTrace.children().length() > 0)
-			{
 				reqNode.appendChild(<action>{backTrace.children()[0].@method}</action>);
-			}
 
 			return(
 
@@ -123,10 +115,11 @@ package com.cleversoap.airbrake
 						{makeBackTrace($error.getStackTrace())}
 					</error>
 					<server-environment>
-						<project-root>{_projectRoot}</project-root>
-						<environment-name>{_environment}</environment-name>
-						<app-version>{_projectVersion}</app-version>
-						<hostname>{_environment}</hostname>
+						<project-root>{this.root}</project-root>
+						<environment-name>{this.environmentName}</environment-name>
+						<app-version>{this.version}</app-version>
+						<hostname>{this.environmentName}</hostname>
+						<var key="os">OSX</var>
 					</server-environment>
 					{reqNode.children().length() > 0 ? reqNode : ""}	
 				</notice>
@@ -158,9 +151,7 @@ package com.cleversoap.airbrake
 
 			var i:int = 0;
 			for (; i < backTrace.length; ++i)
-			{
 				backTraceNode.appendChild(backTrace[i]);
-			}
 
 			backTrace.splice();
 			backTrace = null;

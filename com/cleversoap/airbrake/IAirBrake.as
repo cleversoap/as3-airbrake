@@ -17,6 +17,15 @@ package com.cleversoap.airbrake
 		*
 		* @param $error	Error to report.
 		*/
-		function createErrorNotice($error:Error, $params:Object = null, $url:String = null, $session:Object = null):URLRequest;
+		function createErrorNotice($error:Error, $params:Object = null, $url:String = null):URLRequest;
+
+		function get environment():Object;
+		function get session():Object;
+
+		function addEnvironmentVar($name:String, $value:*):void;
+		function addSessionVar($name:String, $value:*):void;
+
+		function removeEnvironmentVar($name:String):void;
+		function removeSessionVar($name:String):void;
 	}
 }
