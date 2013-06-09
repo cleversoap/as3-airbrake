@@ -174,7 +174,7 @@ package com.cleversoap.airbrake
         {
             var lineRegExp:RegExp = /at (?P<type>[\w\.:]+):*\/*(?P<method>\w+)?\(\)(\[(?P<file>.*):(?P<line>\d+)\])?/;
             var match:Object = lineRegExp.exec($stackTrace);
-            return match ? match.type : null;
+            return match ? match.type : "unknown";
         }
 
 
